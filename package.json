@@ -1,0 +1,22 @@
+{
+  "name": "mo-test",
+  "version": "1.0.0",
+  "description": "A simple Hello World web application",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "dev": "python3 -m http.server 8000"
+  },
+  "keywords": [
+    "hello-world",
+    "web",
+    "simple"
+  ],
+  "author": "dreamsprouts",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dreamsprouts/mo-test.git"
+  },
+  "homepage": "https://mo-test.vercel.app"
+}
