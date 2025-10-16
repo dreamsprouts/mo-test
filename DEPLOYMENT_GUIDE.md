@@ -346,19 +346,67 @@ NODE_ENV=development
 EOF
 ```
 
+### 測試階段：預設環境變數
+
+對於測試階段，可以在專案中直接設定預設值，避免手動輸入：
+
+```bash
+# 建立 .env.example 檔案（可以提交到 Git）
+cat > .env.example << 'EOF'
+# 測試用環境變數範例
+API_URL=https://jsonplaceholder.typicode.com
+API_KEY=test_key_12345
+DATABASE_URL=sqlite:///test.db
+NODE_ENV=development
+PORT=3000
+EOF
+
+# 建立 .env 檔案（測試用，可以提交）
+cat > .env << 'EOF'
+# 測試環境變數
+API_URL=https://jsonplaceholder.typicode.com
+API_KEY=test_key_12345
+DATABASE_URL=sqlite:///test.db
+NODE_ENV=development
+PORT=3000
+EOF
+```
+
 ### 在程式碼中使用環境變數
 
 ```javascript
-// 前端 JavaScript
-const apiUrl = process.env.API_URL || 'http://localhost:3000';
-const apiKey = process.env.API_KEY;
+// 前端 JavaScript - 帶預設值
+const apiUrl = process.env.API_URL || 'https://jsonplaceholder.typicode.com';
+const apiKey = process.env.API_KEY || 'test_key_12345';
 
 // 使用環境變數
-fetch(`${apiUrl}/data`, {
+fetch(`${apiUrl}/posts`, {
   headers: {
     'Authorization': `Bearer ${apiKey}`
   }
-});
+})
+.then(response => response.json())
+.then(data => console.log('API 資料:', data));
+```
+
+### 測試用 API 服務
+
+```javascript
+// 使用免費測試 API，無需真實金鑰
+const testConfig = {
+  apiUrl: 'https://jsonplaceholder.typicode.com',  // 免費測試 API
+  apiKey: 'test_key_12345',                      // 測試用金鑰
+  databaseUrl: 'sqlite:///test.db',              // 本地測試資料庫
+  nodeEnv: 'development'
+};
+
+// 在程式碼中使用
+const config = {
+  apiUrl: process.env.API_URL || testConfig.apiUrl,
+  apiKey: process.env.API_KEY || testConfig.apiKey,
+  databaseUrl: process.env.DATABASE_URL || testConfig.databaseUrl,
+  nodeEnv: process.env.NODE_ENV || testConfig.nodeEnv
+};
 ```
 
 ## 重要注意事項
@@ -421,8 +469,7 @@ EOF
 
 # 建立 .gitignore 避免提交敏感資訊
 cat > .gitignore << 'EOF'
-# 環境變數檔案
-.env
+# 敏感環境變數檔案
 .env.local
 .env.production
 
@@ -435,6 +482,10 @@ build/
 
 # 日誌
 *.log
+
+# 系統檔案
+.DS_Store
+Thumbs.db
 EOF
 
 # Git 操作
@@ -452,31 +503,58 @@ echo "記得在 Vercel 控制台設定生產環境變數！"
 
 ## 環境變數最佳實踐
 
-### 1. 本地開發
+### 1. 測試階段：預設值部署
 ```bash
-# 建立 .env.local 檔案
-echo "API_URL=http://localhost:3000" > .env.local
-echo "API_KEY=dev_key_123" >> .env.local
+# 建立測試用 .env 檔案（可以提交到 Git）
+cat > .env << 'EOF'
+# 測試環境變數 - 可以直接推送到 GitHub
+API_URL=https://jsonplaceholder.typicode.com
+API_KEY=test_key_12345
+DATABASE_URL=sqlite:///test.db
+NODE_ENV=development
+PORT=3000
+EOF
+
+# 推送到 GitHub，Vercel 會自動使用這些值
+git add .env
+git commit -m "Add test environment variables"
+git push origin main
 ```
 
-### 2. Vercel 部署時設定
+### 2. 生產階段：Vercel 控制台設定
 ```bash
-# 使用 Vercel CLI 設定環境變數
-vercel env add API_URL production
-vercel env add API_KEY production
-vercel env add DATABASE_URL production
+# 生產環境才需要手動設定敏感資訊
+# 前往 Vercel 控制台 > Project Settings > Environment Variables
+# 設定真實的 API 金鑰和資料庫連線
 ```
 
-### 3. 環境變數驗證
+### 3. 混合方式：程式碼預設值
 ```javascript
-// 在程式碼中驗證必要的環境變數
-const requiredEnvVars = ['API_URL', 'API_KEY'];
-const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+// 在程式碼中設定預設值，避免手動輸入
+const config = {
+  // 測試用預設值
+  apiUrl: process.env.API_URL || 'https://jsonplaceholder.typicode.com',
+  apiKey: process.env.API_KEY || 'test_key_12345',
+  databaseUrl: process.env.DATABASE_URL || 'sqlite:///test.db',
+  
+  // 生產環境會覆蓋這些值
+  isProduction: process.env.NODE_ENV === 'production'
+};
 
-if (missingVars.length > 0) {
-  console.error('缺少必要的環境變數:', missingVars);
-  process.exit(1);
-}
+// 使用配置
+console.log('API URL:', config.apiUrl);
+console.log('Environment:', config.isProduction ? 'Production' : 'Development');
+```
+
+### 4. 免費測試服務清單
+```javascript
+// 這些服務不需要真實金鑰，適合測試
+const freeTestServices = {
+  jsonPlaceholder: 'https://jsonplaceholder.typicode.com',  // 假資料 API
+  reqres: 'https://reqres.in/api',                          // 測試 API
+  httpbin: 'https://httpbin.org',                          // HTTP 測試
+  mockaroo: 'https://api.mockaroo.com'                      // 假資料生成
+};
 ```
 
 這份指南確保任何 agent 都能精準複製整個部署流程。
