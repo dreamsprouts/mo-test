@@ -259,7 +259,11 @@ git push -u origin main
 2. 使用 GitHub 帳號登入
 3. 點擊 "New Project"
 4. 選擇 `dreamsprouts/mo-test` 倉庫
-5. 點擊 "Deploy"（Vercel 會自動偵測設定）
+5. **設定環境變數**（如需要）：
+   - 在 "Environment Variables" 區塊
+   - 添加變數名稱和值
+   - 選擇環境（Production, Preview, Development）
+6. 點擊 "Deploy"（Vercel 會自動偵測設定）
 
 ### 方法 B：使用 Vercel CLI
 ```bash
@@ -267,6 +271,20 @@ git push -u origin main
 npm i -g vercel
 
 # 部署到 Vercel
+vercel --prod
+```
+
+### 方法 C：使用 Vercel CLI 設定環境變數
+```bash
+# 設定環境變數
+vercel env add VARIABLE_NAME
+
+# 或批量設定
+vercel env add API_URL
+vercel env add DATABASE_URL
+vercel env add SECRET_KEY
+
+# 部署
 vercel --prod
 ```
 
@@ -288,12 +306,72 @@ mo-test/
 └── .git/          # Git 倉庫
 ```
 
+## 環境變數設定
+
+### 常見環境變數範例
+
+```bash
+# API 相關
+API_URL=https://api.example.com
+API_KEY=your_api_key_here
+
+# 資料庫相關
+DATABASE_URL=postgresql://user:password@host:port/database
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=myapp
+DB_USER=username
+DB_PASSWORD=password
+
+# 第三方服務
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_PUBLISHABLE_KEY=pk_test_...
+GOOGLE_ANALYTICS_ID=GA-XXXXXXXXX
+
+# 應用設定
+NODE_ENV=production
+PORT=3000
+JWT_SECRET=your_jwt_secret
+```
+
+### 環境變數檔案（.env.local）
+
+```bash
+# 建立本地環境變數檔案
+cat > .env.local << 'EOF'
+API_URL=https://api.example.com
+API_KEY=your_api_key_here
+DATABASE_URL=postgresql://user:password@host:port/database
+NODE_ENV=development
+EOF
+```
+
+### 在程式碼中使用環境變數
+
+```javascript
+// 前端 JavaScript
+const apiUrl = process.env.API_URL || 'http://localhost:3000';
+const apiKey = process.env.API_KEY;
+
+// 使用環境變數
+fetch(`${apiUrl}/data`, {
+  headers: {
+    'Authorization': `Bearer ${apiKey}`
+  }
+});
+```
+
 ## 重要注意事項
 
 1. **GitHub 倉庫 URL**：記得替換為你的實際 GitHub 倉庫 URL
 2. **專案名稱**：可以修改 `package.json` 中的 `name` 欄位
 3. **Vercel 設定**：`vercel.json` 確保正確的靜態檔案部署
 4. **分支名稱**：使用 `main` 作為預設分支（符合 GitHub 新標準）
+5. **環境變數安全**：
+   - 不要將敏感資訊提交到 Git
+   - 使用 `.env.local` 進行本地開發
+   - 在 Vercel 控制台設定生產環境變數
+   - 敏感變數使用 Vercel 的加密存儲
 
 ## 故障排除
 
@@ -309,8 +387,10 @@ mo-test/
 - [ ] Git 倉庫已初始化
 - [ ] 檔案已提交到 Git
 - [ ] 已推送到 GitHub
+- [ ] 環境變數已設定（如需要）
 - [ ] Vercel 部署成功
 - [ ] 網站功能正常
+- [ ] 環境變數在生產環境中正常工作
 
 ## 自動化腳本
 
@@ -331,6 +411,32 @@ cd $PROJECT_NAME
 # 建立檔案（使用上述 cat 命令）
 # ... 檔案建立代碼 ...
 
+# 建立 .env.local 範例檔案
+cat > .env.local << 'EOF'
+# 本地開發環境變數
+API_URL=http://localhost:3000
+API_KEY=your_local_api_key
+NODE_ENV=development
+EOF
+
+# 建立 .gitignore 避免提交敏感資訊
+cat > .gitignore << 'EOF'
+# 環境變數檔案
+.env
+.env.local
+.env.production
+
+# 依賴
+node_modules/
+
+# 建置輸出
+dist/
+build/
+
+# 日誌
+*.log
+EOF
+
 # Git 操作
 git init
 git add .
@@ -341,6 +447,36 @@ git push -u origin main
 
 echo "專案已成功推送到 GitHub: $GITHUB_URL"
 echo "現在可以前往 Vercel 進行部署"
+echo "記得在 Vercel 控制台設定生產環境變數！"
+```
+
+## 環境變數最佳實踐
+
+### 1. 本地開發
+```bash
+# 建立 .env.local 檔案
+echo "API_URL=http://localhost:3000" > .env.local
+echo "API_KEY=dev_key_123" >> .env.local
+```
+
+### 2. Vercel 部署時設定
+```bash
+# 使用 Vercel CLI 設定環境變數
+vercel env add API_URL production
+vercel env add API_KEY production
+vercel env add DATABASE_URL production
+```
+
+### 3. 環境變數驗證
+```javascript
+// 在程式碼中驗證必要的環境變數
+const requiredEnvVars = ['API_URL', 'API_KEY'];
+const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingVars.length > 0) {
+  console.error('缺少必要的環境變數:', missingVars);
+  process.exit(1);
+}
 ```
 
 這份指南確保任何 agent 都能精準複製整個部署流程。
