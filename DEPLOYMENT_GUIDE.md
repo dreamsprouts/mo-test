@@ -467,9 +467,9 @@ API_KEY=your_local_api_key
 NODE_ENV=development
 EOF
 
-# 建立 .gitignore 避免提交敏感資訊
+# 建立 .gitignore（POC 專案版本）
 cat > .gitignore << 'EOF'
-# 敏感環境變數檔案
+# POC 專案：只排除真正敏感的檔案
 .env.local
 .env.production
 
@@ -486,6 +486,8 @@ build/
 # 系統檔案
 .DS_Store
 Thumbs.db
+
+# 注意：.env 檔案可以提交到 Git（POC 專案用測試值）
 EOF
 
 # Git 操作
@@ -496,65 +498,102 @@ git branch -M main
 git remote add origin $GITHUB_URL
 git push -u origin main
 
-echo "專案已成功推送到 GitHub: $GITHUB_URL"
+echo "POC 專案已成功推送到 GitHub: $GITHUB_URL"
 echo "現在可以前往 Vercel 進行部署"
-echo "記得在 Vercel 控制台設定生產環境變數！"
+echo "POC 專案：完全不需要手動設定環境變數！"
+echo "直接選擇倉庫，點擊 Deploy 即可完成！"
 ```
 
-## 環境變數最佳實踐
+## POC 專案環境變數設定（零手動輸入）
 
-### 1. 測試階段：預設值部署
+### 🚀 POC 專案最佳實踐：完全自動化
+
 ```bash
-# 建立測試用 .env 檔案（可以提交到 Git）
+# 建立 POC 用 .env 檔案（直接提交到 Git，零手動設定）
 cat > .env << 'EOF'
-# 測試環境變數 - 可以直接推送到 GitHub
+# POC 專案環境變數 - 直接推送到 GitHub，Vercel 自動使用
 API_URL=https://jsonplaceholder.typicode.com
-API_KEY=test_key_12345
-DATABASE_URL=sqlite:///test.db
-NODE_ENV=development
+API_KEY=poc_test_key_12345
+DATABASE_URL=sqlite:///poc.db
+NODE_ENV=production
 PORT=3000
+STRIPE_KEY=pk_test_fake_key_for_poc
+GOOGLE_ANALYTICS=GA-POC-TEST-123
 EOF
 
-# 推送到 GitHub，Vercel 會自動使用這些值
+# 推送到 GitHub，Vercel 自動部署，完全不需要手動設定
 git add .env
-git commit -m "Add test environment variables"
+git commit -m "Add POC environment variables"
 git push origin main
 ```
 
-### 2. 生產階段：Vercel 控制台設定
-```bash
-# 生產環境才需要手動設定敏感資訊
-# 前往 Vercel 控制台 > Project Settings > Environment Variables
-# 設定真實的 API 金鑰和資料庫連線
-```
+### 💡 POC 專案程式碼範例
 
-### 3. 混合方式：程式碼預設值
 ```javascript
-// 在程式碼中設定預設值，避免手動輸入
+// POC 專案：直接使用測試值，零手動設定
 const config = {
-  // 測試用預設值
+  // 直接使用測試值，不需要真實金鑰
   apiUrl: process.env.API_URL || 'https://jsonplaceholder.typicode.com',
-  apiKey: process.env.API_KEY || 'test_key_12345',
-  databaseUrl: process.env.DATABASE_URL || 'sqlite:///test.db',
+  apiKey: process.env.API_KEY || 'poc_test_key_12345',
+  databaseUrl: process.env.DATABASE_URL || 'sqlite:///poc.db',
+  stripeKey: process.env.STRIPE_KEY || 'pk_test_fake_key_for_poc',
+  analyticsId: process.env.GOOGLE_ANALYTICS || 'GA-POC-TEST-123',
   
-  // 生產環境會覆蓋這些值
-  isProduction: process.env.NODE_ENV === 'production'
+  // POC 專案標記
+  isPOC: true,
+  environment: 'POC'
 };
 
-// 使用配置
+// 使用配置 - 完全不需要手動設定
+console.log('POC 專案配置:', config);
 console.log('API URL:', config.apiUrl);
-console.log('Environment:', config.isProduction ? 'Production' : 'Development');
+console.log('Stripe Key:', config.stripeKey);
 ```
 
-### 4. 免費測試服務清單
+### 🆓 POC 專案免費測試服務
+
 ```javascript
-// 這些服務不需要真實金鑰，適合測試
-const freeTestServices = {
-  jsonPlaceholder: 'https://jsonplaceholder.typicode.com',  // 假資料 API
-  reqres: 'https://reqres.in/api',                          // 測試 API
-  httpbin: 'https://httpbin.org',                          // HTTP 測試
-  mockaroo: 'https://api.mockaroo.com'                      // 假資料生成
+// POC 專案專用：完全免費，不需要真實金鑰
+const pocServices = {
+  // 假資料 API - 完全免費
+  jsonPlaceholder: 'https://jsonplaceholder.typicode.com',
+  reqres: 'https://reqres.in/api',
+  httpbin: 'https://httpbin.org',
+  
+  // 測試用金鑰（不需要真實註冊）
+  stripe: 'pk_test_fake_key_for_poc',
+  analytics: 'GA-POC-TEST-123',
+  database: 'sqlite:///poc.db'
 };
 ```
+
+### 🔥 POC 專案部署流程
+
+```bash
+# 1. 建立專案
+mkdir my-poc-project
+cd my-poc-project
+
+# 2. 建立所有檔案（包含 .env）
+# ... 檔案建立代碼 ...
+
+# 3. 直接推送，零手動設定
+git init
+git add .
+git commit -m "POC project with test environment"
+git remote add origin https://github.com/your-username/your-poc-repo.git
+git push -u origin main
+
+# 4. 前往 Vercel，選擇倉庫，直接部署
+# 完全不需要手動設定環境變數！
+```
+
+### ⚡ POC 專案優勢
+
+- ✅ **零手動設定**：推送到 GitHub 即可完成
+- ✅ **零真實金鑰**：使用測試值，不需要註冊服務
+- ✅ **零資安煩惱**：POC 專案不需要考慮資安
+- ✅ **零時間浪費**：專注在功能開發，不是部署設定
+- ✅ **零維護成本**：測試值不會過期或失效
 
 這份指南確保任何 agent 都能精準複製整個部署流程。
